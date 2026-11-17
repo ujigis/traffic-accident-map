@@ -96,8 +96,8 @@
       var done = function () { $('copy').textContent = 'コピーしました'; setTimeout(function () { $('copy').textContent = 'この条件のリンクをコピー'; }, 1500); };
       if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
     });
-    $('togglePanel').addEventListener('click', function () { document.body.classList.toggle('panel-open'); });
-    $('closePanel').addEventListener('click', function () { document.body.classList.remove('panel-open'); });
+    $('togglePanel').addEventListener('click', function () { var b = document.body; if (b.classList.contains('panel-hidden')) { b.classList.remove('panel-hidden'); b.classList.add('panel-open'); } else b.classList.toggle('panel-open'); setTimeout(function () { if (map) map.resize(); }, 50); });
+    $('closePanel').addEventListener('click', function () { document.body.classList.remove('panel-open'); document.body.classList.add('panel-hidden'); setTimeout(function () { if (map) map.resize(); }, 50); });
     $('closeDetail').addEventListener('click', closeDetail);
   }
   function syncUI() {
