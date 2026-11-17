@@ -58,3 +58,4 @@ footer p{margin:4px 0}
   #detail{position:absolute;z-index:6;left:0;right:0;bottom:0;width:auto;max-height:46%;border-left:none;border-top:1px solid var(--line);box-shadow:0 -2px 8px rgba(0,0,0,.2)}
   #count{bottom:auto;top:46px}
 }
+footer a{color:var(--acc)}

@@ -288,8 +288,9 @@
     h += '<table>';
     h += row('事故類型', lab('ty', p.ty));
     if (d) {
-      h += row('都道府県', lab('pref', q.pref) + '（コード ' + q.pref + '）');
-      h += row('市区町村コード', q.city);
+      h += row('都道府県', lab('pref', q.pref));
+      var cn = CITY[q.pref] && CITY[q.pref][q.city];
+      h += row('市区町村', cn ? esc(cn) + '（' + q.city + '）' : '（コード ' + q.city + '）');
       h += row('警察署等／本票番号', q.ps + ' ／ ' + q.no);
     }
     h += row('昼夜', lab('dn', p.dn)) + row('天候', lab('wx', p.wx));
@@ -337,6 +338,8 @@
   }
 
   /* ---------- 起動 ---------- */
+  var CITY = {};
+  fetch('data/city.json').then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (c) { CITY = c; });
   fetch('data/codebook.json').then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (j) {
     cb = j; cb.pref = cb.pref || {};
     loadHash(); buildUI(); syncUI(); initMap();
