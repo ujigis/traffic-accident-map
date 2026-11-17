@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全国交通事故オープンデータWebGIS（試作版）</title>
+<link rel="stylesheet" href="lib/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <header>
+      <h1>全国交通事故マップ <span class="beta">試作版</span></h1>
+      <p class="sub">警察庁 交通事故統計情報オープンデータ（本票）2019〜2025年</p>
+    </header>
+
+    <section>
+      <h2>表示</h2>
+      <div class="seg" id="mode">
+        <label><input type="radio" name="mode" value="points">点</label>
+        <label><input type="radio" name="mode" value="heat">ヒートマップ</label>
+        <label><input type="radio" name="mode" value="both" checked>両方</label>
+      </div>
+      <label class="chk"><input type="checkbox" id="wDeath"> 死亡事故を重く見る（ヒートマップ）</label>
+      <div class="legend"><span>低</span><i></i><span>高</span><small>（画面内の相対的な密度）</small></div>
+    </section>
+
+    <section>
+      <h2>背景地図</h2>
+      <select id="basemap">
+        <option value="gsi_pale">地理院地図（淡色）</option>
+        <option value="gsi_std">地理院地図（標準）</option>
+        <option value="gsi_photo">地理院地図（写真）</option>
+        <option value="gsi_blank">地理院地図（白地図）</option>
+        <option value="osm">OpenStreetMap</option>
+      </select>
+    </section>
+
+    <section>
+      <h2>地域へ移動</h2>
+      <select id="jump"><option value="">（選択してください）</option></select>
+    </section>
+
+    <section>
+      <h2>年（統計年）</h2>
+      <div class="grid4" id="years"></div>
+      <div class="mini"><button type="button" data-all="years">全て</button><button type="button" data-none="years">解除</button></div>
+    </section>
+
+    <section>
+      <h2>月</h2>
+      <div class="grid6" id="months"></div>
+      <div class="mini"><button type="button" data-all="months">全て</button><button type="button" data-none="months">解除</button>
+        <button type="button" data-preset="winter">冬</button><button type="button" data-preset="summer">夏</button></div>
+    </section>
+
+    <section>
+      <h2>曜日・祝日</h2>
+      <div class="grid4" id="dows"></div>
+    </section>
+
+    <section>
+      <h2>時間帯 <span id="hourLabel">0〜23時</span></h2>
+      <div class="hours"><select id="h0"></select><span>時 〜</span><select id="h1"></select><span>時</span></div>
+      <div class="mini"><button type="button" data-hour="0,23">終日</button><button type="button" data-hour="7,9">朝(7-9)</button><button type="button" data-hour="16,19">夕(16-19)</button><button type="button" data-hour="20,5">夜(20-5)</button></div>
+    </section>
+
+    <section>
+      <h2>事故内容</h2>
+      <div class="seg" id="ac">
+        <label><input type="radio" name="ac" value="all" checked>すべて</label>
+        <label><input type="radio" name="ac" value="1">死亡</label>
+        <label><input type="radio" name="ac" value="2">負傷</label>
+      </div>
+    </section>
+
+    <section>
+      <h2>事故類型</h2>
+      <div class="seg wrap" id="ty">
+        <label><input type="radio" name="ty" value="all" checked>全て</label>
+        <label><input type="radio" name="ty" value="1">人対車両</label>
+        <label><input type="radio" name="ty" value="21">車両相互</label>
+        <label><input type="radio" name="ty" value="41">車両単独</label>
+      </div>
+    </section>
+
+    <details>
+      <summary>詳細条件</summary>
+      <label class="fld">当事者（A・Bのいずれか）<select id="party"></select></label>
+      <label class="fld">年齢層（A・Bのいずれか）<select id="age"></select></label>
+      <label class="fld">天候<select id="wx"></select></label>
+      <label class="fld">昼夜<select id="dn"></select></label>
+      <p class="note" id="lowzoomNote">※ 月・時間帯・曜日・当事者・年齢・天候・昼夜の絞り込みは、ズーム11以上で反映されます。</p>
+    </details>
+
+    <section class="actions">
+      <button type="button" id="reset">条件をリセット</button>
+      <button type="button" id="copy">この条件のリンクをコピー</button>
+    </section>
+
+    <footer>
+      <p>出典：警察庁「交通事故統計情報のオープンデータ」を加工して作成。背景地図：国土地理院、© OpenStreetMap contributors。</p>
+      <p>地点は元データの座標精度に依存します。人身事故のみで、物損事故は含みません。年は警察庁の統計年です。</p>
+    </footer>
+  </aside>
+
+  <main id="mapwrap">
+    <div id="map"></div>
+    <div id="count"></div>
+    <div id="tip" hidden></div>
+    <button id="togglePanel" type="button" aria-label="条件パネルの表示切替">☰ 条件</button>
+  </main>
+
+  <aside id="detail" hidden>
+    <button id="closeDetail" type="button" aria-label="閉じる">×</button>
+    <div id="detailBody"></div>
+  </aside>
+</div>
+<script src="lib/maplibre-gl.js"></script>
+<script src="lib/pmtiles.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
