@@ -97,6 +97,7 @@
       if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
     });
     $('togglePanel').addEventListener('click', function () { document.body.classList.toggle('panel-open'); });
+    $('closePanel').addEventListener('click', function () { document.body.classList.remove('panel-open'); });
     $('closeDetail').addEventListener('click', closeDetail);
   }
   function syncUI() {
@@ -186,7 +187,7 @@
       map.addSource('sel', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'sel', type: 'circle', source: 'sel', paint: { 'circle-radius': 11, 'circle-color': 'rgba(255,255,255,0)', 'circle-stroke-color': '#111', 'circle-stroke-width': 2.5 } });
       map.on('mousemove', 'pt', onHover); map.on('mouseleave', 'pt', function () { $('tip').hidden = true; map.getCanvas().style.cursor = ''; });
-      map.on('click', onClick);
+      map.on('click', function (e) { document.body.classList.remove('panel-open'); onClick(e); });
       map.on('moveend', function () { saveHash(); updateCount(); });
       map.on('idle', updateCount);
       var ct; map.on('data', function () { clearTimeout(ct); ct = setTimeout(updateCount, 400); });
