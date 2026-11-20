@@ -64,3 +64,7 @@ body.panel-hidden #panel{display:none}
 footer a{color:var(--acc)}
 
 body.panel-hidden #togglePanel{display:block}
+
+.legend.dots{gap:12px;margin-bottom:2px}.legend.dots i.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:1.5px solid #fff;box-shadow:0 0 0 1px #bbb}.legend.dots i.d{background:#e60012;width:13px;height:13px}.legend.dots i.i{background:#2f6fb3}
+
+#colorRows{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px}.crow{display:flex;align-items:center;font-size:12.5px}.crow input[type=color]{width:30px;height:24px;padding:0;border:1px solid var(--line);border-radius:3px;margin-right:4px;background:#fff;cursor:pointer}

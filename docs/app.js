@@ -36,6 +36,54 @@
     return { y: YEARS.slice(), m: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], w: [1, 2, 3, 4, 5, 6, 7, 0], h0: 0, h1: 23, ac: 'all', ty: 'all', pa: '', ag: '', wx: '', dn: '', mode: 'both', bm: 'gsi_pale', wd: false };
   }
 
+
+  /* ---------- 点の色（利用者が選べる） ---------- */
+  var YCOL = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d'];
+  var CATS = {
+    ac: { name: '事故内容', items: [['死亡', '#e60012'], ['負傷', '#2f6fb3']] },
+    time: { name: '時間帯', items: [['朝(5-9時)', '#2f6fb3'], ['昼(10-15時)', '#f2c200'], ['夕(16-19時)', '#f07d00'], ['夜(20-4時)', '#4b2a8c']] },
+    ty: { name: '事故類型', items: [['人対車両', '#e60012'], ['車両相互', '#2f6fb3'], ['車両単独', '#2e9e4f']] },
+    y: { name: '統計年', items: YEARS.map(function (y, i) { return [y + '年', YCOL[i]]; }) }
+  };
+  var CB = { by: 'ac', col: {} };
+  function colDefault(k) { return CATS[k].items.map(function (it) { return it[1]; }); }
+  function loadCB() {
+    try { var j = JSON.parse(localStorage.getItem('pointColors') || 'null'); if (j && CATS[j.by]) { CB.by = j.by; CB.col = j.col || {}; } } catch (e) {}
+  }
+  function saveCB() { try { localStorage.setItem('pointColors', JSON.stringify(CB)); } catch (e) {} }
+  function curCols(k) { var d = colDefault(k), c = CB.col[k] || []; return d.map(function (x, i) { return c[i] || x; }); }
+  function pointColorExpr() {
+    var k = CB.by, c = curCols(k), H = ['get', 'h'];
+    if (k === 'ac') return ['case', ['==', ['get', 'ac'], 1], c[0], c[1]];
+    if (k === 'ty') return ['case', ['==', ['get', 'ty'], 1], c[0], ['==', ['get', 'ty'], 21], c[1], c[2]];
+    if (k === 'time') return ['case', ['all', ['>=', H, 5], ['<=', H, 9]], c[0], ['all', ['>=', H, 10], ['<=', H, 15]], c[1], ['all', ['>=', H, 16], ['<=', H, 19]], c[2], c[3]];
+    var e = ['case']; YEARS.forEach(function (y, i) { if (i < YEARS.length - 1) e.push(['==', ['get', 'y'], y], c[i]); }); e.push(c[YEARS.length - 1]); return e;
+  }
+  function applyPointColor() {
+    if (map && map.getLayer('pt')) map.setPaintProperty('pt', 'circle-color', pointColorExpr());
+    var lg = $('dotLegend'); if (!lg) return;
+    var c = curCols(CB.by), h = '';
+    CATS[CB.by].items.forEach(function (it, i) { h += '<span><i class="dot" style="background:' + c[i] + '"></i>' + it[0] + '</span>'; });
+    lg.innerHTML = h + '<small>（点・ズーム11以上。死亡事故は大きく表示）</small>';
+  }
+  function buildColorUI() {
+    var sel = $('colorBy'); if (!sel) return;
+    sel.innerHTML = Object.keys(CATS).map(function (k) { return '<option value="' + k + '">' + CATS[k].name + '</option>'; }).join('');
+    sel.value = CB.by;
+    function rows() {
+      var c = curCols(CB.by), box = $('colorRows'); box.innerHTML = '';
+      CATS[CB.by].items.forEach(function (it, i) {
+        var l = document.createElement('label'); l.className = 'crow';
+        var inp = document.createElement('input'); inp.type = 'color'; inp.value = c[i];
+        inp.addEventListener('input', function () { var cc = curCols(CB.by); cc[i] = inp.value; CB.col[CB.by] = cc; saveCB(); applyPointColor(); });
+        l.appendChild(inp); l.appendChild(document.createTextNode(' ' + it[0])); box.appendChild(l);
+      });
+    }
+    sel.addEventListener('change', function () { CB.by = sel.value; saveCB(); rows(); applyPointColor(); });
+    $('colorReset').addEventListener('click', function () { delete CB.col[CB.by]; saveCB(); rows(); applyPointColor(); });
+    rows(); applyPointColor();
+  }
+
   /* ---------- UI構築 ---------- */
   function checks(el, items, key) {
     el.innerHTML = '';
@@ -70,6 +118,7 @@
     fillSelect($('wx'), wxs);
     var dns = [['', 'すべて']].concat(Object.keys(cb.dn || {}).map(function (k) { return [k, cb.dn[k]]; }));
     fillSelect($('dn'), dns);
+    buildColorUI();
     fillSelect($('jump'), [['', '（選択してください）']].concat(JUMP.map(function (j, i) { return [i, j[0]]; })));
     $('jump').addEventListener('change', function (e) { if (e.target.value === '') return; var j = JUMP[+e.target.value]; map.flyTo({ center: [j[2], j[1]], zoom: j[3] }); });
     ['h0', 'h1'].forEach(function (id) { $(id).addEventListener('change', function () { S.h0 = +$('h0').value; S.h1 = +$('h1').value; apply(); }); });
@@ -182,9 +231,14 @@
         'heatmap-color': ramp,
         'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.8, 15, 0.8, 17, 0.45] } });
       map.addLayer({ id: 'pt', type: 'circle', source: 'core', 'source-layer': 'acc', minzoom: 11, layout: { 'circle-sort-key': ['case', ['==', ['get', 'ac'], 1], 1, 0] }, paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 1.2, 14, 3, 17, 7],
-        'circle-color': ['case', ['==', ['get', 'ac'], 1], '#d7191c', '#2f6fb3'],
-        'circle-opacity': 0.75, 'circle-stroke-color': '#fff', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, 0, 15, 0.8] } });
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+          11, ['case', ['==', ['get', 'ac'], 1], 3, 1.2],
+          14, ['case', ['==', ['get', 'ac'], 1], 6.5, 3],
+          17, ['case', ['==', ['get', 'ac'], 1], 11, 7]],
+        'circle-color': pointColorExpr(),
+        'circle-opacity': ['case', ['==', ['get', 'ac'], 1], 1, 0.75],
+        'circle-stroke-color': ['case', ['==', ['get', 'ac'], 1], '#fff', '#fff'],
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, ['case', ['==', ['get', 'ac'], 1], 1, 0], 15, ['case', ['==', ['get', 'ac'], 1], 1.6, 0.8]] } });
       map.addSource('sel', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'sel', type: 'circle', source: 'sel', paint: { 'circle-radius': 11, 'circle-color': 'rgba(255,255,255,0)', 'circle-stroke-color': '#111', 'circle-stroke-width': 2.5 } });
       map.on('mousemove', 'pt', onHover); map.on('mouseleave', 'pt', function () { $('tip').hidden = true; map.getCanvas().style.cursor = ''; });
@@ -340,6 +394,7 @@
   }
 
   /* ---------- 起動 ---------- */
+  loadCB();
   var CITY = {};
   fetch('data/city.json').then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (c) { CITY = c; });
   fetch('data/codebook.json').then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (j) {

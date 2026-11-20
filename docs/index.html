@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>全国交通事故オープンデータWebGIS（試作版）</title>
 <link rel="stylesheet" href="lib/maplibre-gl.css?v=5.24.1">
-<link rel="stylesheet" href="style.css?v=20261118a">
+<link rel="stylesheet" href="style.css?v=20261120b">
 </head>
 <body>
 <div id="app">
@@ -24,7 +24,15 @@
         <label><input type="radio" name="mode" value="both" checked>両方</label>
       </div>
       <label class="chk"><input type="checkbox" id="wDeath"> 死亡事故を重く見る（ヒートマップ）</label>
+      <div class="legend dots" id="dotLegend"></div>
       <div class="legend"><span>低</span><i></i><span>高</span><small>（画面内の相対的な密度）</small></div>
+    </section>
+
+    <section>
+      <h2>点の色</h2>
+      <select id="colorBy"></select>
+      <div id="colorRows"></div>
+      <div class="mini"><button type="button" id="colorReset">この基準の色を元に戻す</button></div>
     </section>
 
     <section>
@@ -123,6 +131,6 @@
 </div>
 <script src="lib/maplibre-gl.js?v=5.24.1"></script>
 <script src="lib/pmtiles.js?v=3.2.1"></script>
-<script src="app.js?v=20261118a"></script>
+<script src="app.js?v=20261120b"></script>
 </body>
 </html>
